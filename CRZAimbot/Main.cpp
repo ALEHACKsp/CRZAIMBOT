@@ -13,7 +13,7 @@ uintptr_t StartTimeToAim = 0;
 Vector lastSet;
 
 float current_fov_limiter = 999.f;
-float smoothness = 1.f; //Default Smooth
+float smoothness = 5.f; //Default Smooth
 float vis_old[100];
 
 bool TargetLocked = false;
@@ -203,9 +203,6 @@ void ProcessPlayer(Entity* LPlayer, Entity* target, UINT64 entitylist, int id) {
 		return;
 	}
 
-	Unprotect(ToggleHotkey);
-	ToggleHotkey();
-	Protect(ToggleHotkey);
 
 	if (enable_glow_hack == 1) {
 		if ((int)target->buffer[GLOW_CONTEXT] != 1 || (int)target->buffer[GLOW_VISIBLE_TYPE] != 1 || (int)target->buffer[GLOW_FADE] != 872415232) {
@@ -531,6 +528,172 @@ void CheatLoop() {
 			Protect(milliseconds_now);
 		}
 
+		bool k_plus = 0;
+		bool add = (GetAsyncKeyState(VK_ADD) & 0x8000) != 0;
+		if (add && k_plus == 0) {
+			k_plus = 1;
+			if (smoothness >= 19.f) {
+				smoothness = 20.f;
+				printf("Smooth: 20\n");
+				Beep(900, 500);
+			}
+			else {
+				smoothness += 1.f;
+				std::cout << "Smooth: " << smoothness << "\n";
+				Beep(900, 300);
+			}
+		}
+		else if (k_plus == 1) {
+			k_plus = 0;
+		}
+
+		bool k_minus = 0;
+		bool decrease = (GetAsyncKeyState(VK_SUBTRACT) & 0x8000) != 0;
+		if (decrease && k_minus == 0) {
+			k_minus = -1;
+			if (smoothness >= 19.f) {
+				smoothness = 18.f;
+				printf("Smooth: 18\n");
+				Beep(900, 500);
+			}
+			else {
+				smoothness -= 1.f;
+				std::cout << "Smooth: " << smoothness << "\n";
+				Beep(900, 300);
+			}
+		}
+		else if (k_plus == -1) {
+			k_plus = 0;
+		}
+
+		bool k_aimbot = 0;
+		bool aimbot = (GetAsyncKeyState(VK_MULTIPLY) & 0x8000) != 0;
+		if (aimbot && k_aimbot == 0) {
+			k_aimbot = 1;
+			if (enable_aimbot) {
+				enable_aimbot = 0;
+				printf("Aimbot [Off]\n");
+				Beep(900, 500);
+			}
+			else {
+				enable_aimbot = 1;
+				printf("Aimbot [On]\n");
+				Beep(900, 300);
+			}
+		}
+		else if (k_aimbot == 1) {
+			k_aimbot = 0;
+		}
+
+		bool k_aimlock = 0;
+		bool aimlock = (GetAsyncKeyState(VK_DELETE) & 0x8000) != 0;
+		if (aimlock && k_aimlock == 0) {
+			k_aimlock = 1;
+			if (enable_aimbot_lock_mode) {
+				enable_aimbot_lock_mode = 0;
+				printf("AimLock [Off]\n");
+				Beep(900, 500);
+			}
+			else {
+				enable_aimbot_lock_mode = 1;
+				printf("AimLock [On]\n");
+				Beep(900, 300);
+			}
+		}
+		else if (k_aimlock == 1) {
+			k_aimlock = 0;
+		}
+
+		bool k_obser = 0;
+		bool displayobser = (GetAsyncKeyState(VK_MENU) & 0x8000) != 0;
+		if (displayobser && k_obser == 0) {
+			k_obser = 1;
+			if (Spectators >= 1)
+			{
+				std::cout << "Spectators: " << Spectators << "\n";
+				Beep(900, 500);
+			}
+		}
+		else if (k_obser == 1) {
+			k_obser = 0;
+		}
+
+		bool k_aimTeam = 0;
+		bool AimTeam = (GetAsyncKeyState(VK_HOME) & 0x8000) != 0;
+		if (AimTeam && k_aimTeam == 0) {
+			k_aimTeam = 1;
+			Beep(900, 300);
+			aimTeam = !aimTeam;
+		}
+		else if (k_aimTeam == 1) {
+			k_aimTeam = 0;
+		}
+
+		bool k_knockdown = 0;
+		bool knockdown = (GetAsyncKeyState(VK_OEM_3) & 0x8000) != 0;
+		if (knockdown && k_knockdown == 0) {
+			k_knockdown = 1;
+			if (ignore_knockdown) {
+				ignore_knockdown = 0;
+				printf("Ignore Knockdown [Off]\n");
+				Beep(900, 500);
+			}
+			else {
+				ignore_knockdown = 1;
+				printf("Ignore Knockdown [On]\n");
+				Beep(900, 300);
+			}
+		}
+		else if (k_knockdown == 1) {
+			k_knockdown = 0;
+		}
+
+		bool k_onlyhead = 0;
+		bool onlyhead = (GetAsyncKeyState(VK_DECIMAL) & 0x8000) != 0;
+		if (onlyhead && k_onlyhead == 0) {
+			k_onlyhead = 1;
+			if (only_head) {
+				only_head = 0;
+				targets[0] = 7;
+				targets[1] = 5;
+				targets[2] = 3;
+				targets[3] = 2;
+				printf("Aimbot [Head-Body] \n");
+				Beep(900, 500);
+			}
+			else {
+				only_head = 1;
+				targets[0] = 7;
+				targets[1] = 8;
+				targets[2] = 7;
+				targets[3] = 8;
+				printf("Aimbot [Head Only] \n");
+				Beep(900, 300);
+			}
+		}
+		else if (k_onlyhead == 1) {
+			k_onlyhead = 0;
+		}
+
+		bool k_glowhack = 0;
+		bool glowhack = (GetAsyncKeyState(VK_DIVIDE) & 0x8000) != 0;
+		if (glowhack && k_glowhack == 0) {
+			k_glowhack = 1;
+			if (enable_glow_hack) {
+				enable_glow_hack = 0;
+				printf("Glow Hack [Off]\n");
+				Beep(900, 500);
+			}
+			else {
+				enable_glow_hack = 1;
+				printf("Glow Hack [On]\n");
+				Beep(900, 300);
+			}
+		}
+		else if (k_glowhack == 1) {
+			k_glowhack = 0;
+		}
+
 		if (enable_aimbot == 1) {
 			Unprotect(milliseconds_now);
 			bool key_pressed = (GetKeyState(VK_RBUTTON) & 0x8000);
@@ -589,177 +752,177 @@ void CheatLoop() {
 
 }
 
-void ToggleHotkey() {
-	Protect(_ReturnAddress());
-
-	bool k_plus = 0;
-	bool add = (GetAsyncKeyState(VK_ADD) & 0x8000) != 0;
-	if (add && k_plus == 0) {
-		k_plus = 1;
-		if (smoothness >= 19.f) {
-			smoothness = 20.f;
-			printf("Smooth: 20\n");
-			Beep(900, 500);
-		}
-		else {
-			smoothness += 1.f;
-			std::cout << "Smooth: " << smoothness << "\n";
-			Beep(900, 300);
-		}
-	}
-	else if (k_plus == 1) {
-		k_plus = 0;
-	}
-
-	bool k_minus = 0;
-	bool decrease = (GetAsyncKeyState(VK_SUBTRACT) & 0x8000) != 0;
-	if (decrease && k_minus == 0) {
-		k_minus = -1;
-		if (smoothness >= 19.f) {
-			smoothness = 18.f;
-			printf("Smooth: 18\n");
-			Beep(900, 500);
-		}
-		else {
-			smoothness -= 1.f;
-			std::cout << "Smooth: " << smoothness << "\n";
-			Beep(900, 300);
-		}
-	}
-	else if (k_plus == -1) {
-		k_plus = 0;
-	}
-
-	bool k_aimbot = 0;
-	bool aimbot = (GetAsyncKeyState(VK_MULTIPLY) & 0x8000) != 0;
-	if (aimbot && k_aimbot == 0) {
-		k_aimbot = 1;
-		if (enable_aimbot) {
-			enable_aimbot = 0;
-			printf("Aimbot [Off]\n");
-			Beep(900, 500);
-		}
-		else {
-			enable_aimbot = 1;
-			printf("Aimbot [On]\n");
-			Beep(900, 300);
-		}
-	}
-	else if (k_aimbot == 1) {
-		k_aimbot = 0;
-	}
-
-	bool k_aimlock = 0;
-	bool aimlock = (GetAsyncKeyState(VK_DELETE) & 0x8000) != 0;
-	if (aimlock && k_aimlock == 0) {
-		k_aimlock = 1;
-		if (enable_aimbot_lock_mode) {
-			enable_aimbot_lock_mode = 0;
-			printf("AimLock [Off]\n");
-			Beep(900, 500);
-		}
-		else {
-			enable_aimbot_lock_mode = 1;
-			printf("AimLock [On]\n");
-			Beep(900, 300);
-		}
-	}
-	else if (k_aimlock == 1) {
-		k_aimlock = 0;
-	}
-
-	bool k_obser = 0;
-	bool displayobser = (GetAsyncKeyState(VK_MENU) & 0x8000) != 0;
-	if (displayobser && k_obser == 0) {
-		k_obser = 1;
-		if (Spectators >= 1)
-		{
-			std::cout << "Spectators: " << Spectators << "\n";
-			Beep(900, 500);
-		}
-	}
-	else if (k_obser == 1) {
-		k_obser = 0;
-	}
-
-	bool k_aimTeam = 0;
-	bool AimTeam = (GetAsyncKeyState(VK_HOME) & 0x8000) != 0;
-	if (AimTeam && k_aimTeam == 0) {
-		k_aimTeam = 1;
-		Beep(900, 300);
-		aimTeam = !aimTeam;
-	}
-	else if (k_aimTeam == 1) {
-		k_aimTeam = 0;
-	}
-
-	bool k_knockdown = 0;
-	bool knockdown = (GetAsyncKeyState(VK_CAPITAL) & 0x8000) != 0;
-	if (knockdown && k_knockdown == 0) {
-		k_knockdown = 1;
-		if (ignore_knockdown) {
-			ignore_knockdown = 0;
-			printf("Ignore Knockdown [Off]\n");
-			Beep(900, 500);
-		}
-		else {
-			ignore_knockdown = 1;
-			printf("Ignore Knockdown [On]\n");
-			Beep(900, 300);
-		}
-	}
-	else if (k_knockdown == 1) {
-		k_knockdown = 0;
-	}
-
-	bool k_onlyhead = 0;
-	bool onlyhead = (GetAsyncKeyState(VK_DECIMAL) & 0x8000) != 0;
-	if (onlyhead && k_onlyhead == 0) {
-		k_onlyhead = 1;
-		if (only_head) {
-			only_head = 0;
-			targets[0] = 7;
-			targets[1] = 5;
-			targets[2] = 3;
-			targets[3] = 2;
-			printf("Aimbot [Body] \n");
-			Beep(900, 500);
-		}
-		else {
-			only_head = 1;
-			targets[0] = 7;
-			targets[1] = 8;
-			targets[2] = 7;
-			targets[3] = 8;
-			printf("Aimbot [Head] \n");
-			Beep(900, 300);
-		}
-	}
-	else if (k_onlyhead == 1) {
-		k_onlyhead = 0;
-	}
-
-	bool k_glowhack = 0;
-	bool glowhack = (GetAsyncKeyState(VK_DIVIDE) & 0x8000) != 0;
-	if (glowhack && k_glowhack == 0) {
-		k_glowhack = 1;
-		if (enable_glow_hack) {
-			enable_glow_hack = 0;
-			printf("Glow Hack [Off]\n");
-			Beep(900, 500);
-		}
-		else {
-			enable_glow_hack = 1;
-			printf("Glow Hack [On]\n");
-			Beep(900, 300);
-		}
-	}
-	else if (k_glowhack == 1) {
-		k_glowhack = 0;
-	}
-
-	Unprotect(_ReturnAddress());
-}
+//void ToggleHotkey() {
+//	Protect(_ReturnAddress());
+//
+//	bool k_plus = 0;
+//	bool add = (GetAsyncKeyState(VK_ADD) & 0x8000) != 0;
+//	if (add && k_plus == 0) {
+//		k_plus = 1;
+//		if (smoothness >= 19.f) {
+//			smoothness = 20.f;
+//			printf("Smooth: 20\n");
+//			Beep(900, 500);
+//		}
+//		else {
+//			smoothness += 1.f;
+//			std::cout << "Smooth: " << smoothness << "\n";
+//			Beep(900, 300);
+//		}
+//	}
+//	else if (k_plus == 1) {
+//		k_plus = 0;
+//	}
+//
+//	bool k_minus = 0;
+//	bool decrease = (GetAsyncKeyState(VK_SUBTRACT) & 0x8000) != 0;
+//	if (decrease && k_minus == 0) {
+//		k_minus = -1;
+//		if (smoothness >= 19.f) {
+//			smoothness = 18.f;
+//			printf("Smooth: 18\n");
+//			Beep(900, 500);
+//		}
+//		else {
+//			smoothness -= 1.f;
+//			std::cout << "Smooth: " << smoothness << "\n";
+//			Beep(900, 300);
+//		}
+//	}
+//	else if (k_plus == -1) {
+//		k_plus = 0;
+//	}
+//
+//	bool k_aimbot = 0;
+//	bool aimbot = (GetAsyncKeyState(VK_MULTIPLY) & 0x8000) != 0;
+//	if (aimbot && k_aimbot == 0) {
+//		k_aimbot = 1;
+//		if (enable_aimbot) {
+//			enable_aimbot = 0;
+//			printf("Aimbot [Off]\n");
+//			Beep(900, 500);
+//		}
+//		else {
+//			enable_aimbot = 1;
+//			printf("Aimbot [On]\n");
+//			Beep(900, 300);
+//		}
+//	}
+//	else if (k_aimbot == 1) {
+//		k_aimbot = 0;
+//	}
+//
+//	bool k_aimlock = 0;
+//	bool aimlock = (GetAsyncKeyState(VK_DELETE) & 0x8000) != 0;
+//	if (aimlock && k_aimlock == 0) {
+//		k_aimlock = 1;
+//		if (enable_aimbot_lock_mode) {
+//			enable_aimbot_lock_mode = 0;
+//			printf("AimLock [Off]\n");
+//			Beep(900, 500);
+//		}
+//		else {
+//			enable_aimbot_lock_mode = 1;
+//			printf("AimLock [On]\n");
+//			Beep(900, 300);
+//		}
+//	}
+//	else if (k_aimlock == 1) {
+//		k_aimlock = 0;
+//	}
+//
+//	bool k_obser = 0;
+//	bool displayobser = (GetAsyncKeyState(VK_MENU) & 0x8000) != 0;
+//	if (displayobser && k_obser == 0) {
+//		k_obser = 1;
+//		if (Spectators >= 1)
+//		{
+//			std::cout << "Spectators: " << Spectators << "\n";
+//			Beep(900, 500);
+//		}
+//	}
+//	else if (k_obser == 1) {
+//		k_obser = 0;
+//	}
+//
+//	bool k_aimTeam = 0;
+//	bool AimTeam = (GetAsyncKeyState(VK_HOME) & 0x8000) != 0;
+//	if (AimTeam && k_aimTeam == 0) {
+//		k_aimTeam = 1;
+//		Beep(900, 300);
+//		aimTeam = !aimTeam;
+//	}
+//	else if (k_aimTeam == 1) {
+//		k_aimTeam = 0;
+//	}
+//
+//	bool k_knockdown = 0;
+//	bool knockdown = (GetAsyncKeyState(VK_CAPITAL) & 0x8000) != 0;
+//	if (knockdown && k_knockdown == 0) {
+//		k_knockdown = 1;
+//		if (ignore_knockdown) {
+//			ignore_knockdown = 0;
+//			printf("Ignore Knockdown [Off]\n");
+//			Beep(900, 500);
+//		}
+//		else {
+//			ignore_knockdown = 1;
+//			printf("Ignore Knockdown [On]\n");
+//			Beep(900, 300);
+//		}
+//	}
+//	else if (k_knockdown == 1) {
+//		k_knockdown = 0;
+//	}
+//
+//	bool k_onlyhead = 0;
+//	bool onlyhead = (GetAsyncKeyState(VK_DECIMAL) & 0x8000) != 0;
+//	if (onlyhead && k_onlyhead == 0) {
+//		k_onlyhead = 1;
+//		if (only_head) {
+//			only_head = 0;
+//			targets[0] = 7;
+//			targets[1] = 5;
+//			targets[2] = 3;
+//			targets[3] = 2;
+//			printf("Aimbot [Body] \n");
+//			Beep(900, 500);
+//		}
+//		else {
+//			only_head = 1;
+//			targets[0] = 7;
+//			targets[1] = 8;
+//			targets[2] = 7;
+//			targets[3] = 8;
+//			printf("Aimbot [Head] \n");
+//			Beep(900, 300);
+//		}
+//	}
+//	else if (k_onlyhead == 1) {
+//		k_onlyhead = 0;
+//	}
+//
+//	bool k_glowhack = 0;
+//	bool glowhack = (GetAsyncKeyState(VK_DIVIDE) & 0x8000) != 0;
+//	if (glowhack && k_glowhack == 0) {
+//		k_glowhack = 1;
+//		if (enable_glow_hack) {
+//			enable_glow_hack = 0;
+//			printf("Glow Hack [Off]\n");
+//			Beep(900, 500);
+//		}
+//		else {
+//			enable_glow_hack = 1;
+//			printf("Glow Hack [On]\n");
+//			Beep(900, 300);
+//		}
+//	}
+//	else if (k_glowhack == 1) {
+//		k_glowhack = 0;
+//	}
+//
+//	Unprotect(_ReturnAddress());
+//}
 
 void Configure() {
 
@@ -810,7 +973,7 @@ void Configure() {
 	std::cout << hi10_str;
 	memset(hi10_str, 0, sizeof(hi10_str));
 
-	char hi11_str[] = { '8','.',' ','C','a','p','s','l','o','c','k',' ','t','o',' ','E','n','a','b','l','e','/','D','i','s','a','b','l','e',' ','I','g','n','o','r','e',' ','K','n','o','c','k','d','o','w','n',' ','(',' ','D','e','f','a','u','l','t',' ','I','s',' ','O','N',' ',')','\n','\0' };
+	char hi11_str[] = { '8','.',' ','~',' ','t','o',' ','E','n','a','b','l','e','/','D','i','s','a','b','l','e',' ','I','g','n','o','r','e',' ','K','n','o','c','k','d','o','w','n',' ','(',' ','D','e','f','a','u','l','t',' ','I','s',' ','O','N',' ',')','\n','\0' };
 	std::cout << hi11_str;
 	memset(hi11_str, 0, sizeof(hi11_str));
 

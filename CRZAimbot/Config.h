@@ -1,7 +1,7 @@
 #pragma once
 
 //MISC
-#define Max_Cheat_Distance 450.f
+#define Max_Cheat_Distance 400.f
 
 
 //XOR Keys
