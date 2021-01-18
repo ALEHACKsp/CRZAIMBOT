@@ -24,4 +24,5 @@ void SmoothType_Asist(float fov, float TargetDistance, Vector* Delta, float smoo
 void SmoothType_TargetLock(float fov, float TargetDistance, Vector* Delta, float smooth_multiplier);
 int AimAngles(Entity* LocalPlayer, Entity* target, Vector* out);
 void CheatLoop();
+void ToggleHotkey();
 void Configure();
