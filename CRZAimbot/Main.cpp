@@ -778,7 +778,7 @@ void Configure() {
 	std::cout << hi_str;
 	memset(hi_str, 0, sizeof(hi_str));
 
-	char hi2_str[] = { 'T','h','i','s',' ','C','h','e','a','t',' ','M','o','d','i','f','i','c','a','t','i','o','n',' ','b','y',' ','D','I','E','G','O',' ','W','i','t','h',' ','C','o','n','f','i','g',':','\n','\0' };
+	char hi2_str[] = { 'T','h','i','s',' ','C','h','e','a','t',' ','M','o','d','i','f','i','c','a','t','i','o','n',' ','b','y',' ','D','I','E','G','O',' ','W','i','t','h',' ','C','o','n','f','i','g',':','\n','\n','\0' };
 	std::cout << hi2_str;
 	memset(hi2_str, 0, sizeof(hi2_str));
 
@@ -818,7 +818,7 @@ void Configure() {
 	std::cout << hi12_str;
 	memset(hi12_str, 0, sizeof(hi12_str));
 
-	char hi13_str[] = { '1','0','.',' ','A','L','T',' ','t','o',' ','S','h','o','w',' ','C','o','u','n','t',' ','S','p','e','c','t','a','t','e',' ','o','n',' ','D','i','s','p','l','a','y',' ','(',' ','G','e','t',' ','S','o','u','n','d',' ','B','e','e','p',' ','i','f',' ','Y','o','u',' ','H','a','v','e',' ','S','p','e','c','t','a','t','o','r',' ',')','\n','\0' };
+	char hi13_str[] = { '1','0','.',' ','A','L','T',' ','t','o',' ','S','h','o','w',' ','C','o','u','n','t',' ','S','p','e','c','t','a','t','e',' ','o','n',' ','D','i','s','p','l','a','y',' ','(',' ','G','e','t',' ','S','o','u','n','d',' ','B','e','e','p',' ','i','f',' ','Y','o','u',' ','H','a','v','e',' ','S','p','e','c','t','a','t','o','r',' ',')','\n','\n','\0' };
 	std::cout << hi13_str;
 	memset(hi13_str, 0, sizeof(hi13_str));;
 
@@ -872,13 +872,6 @@ void Configure() {
 	std::cin.clear();
 	std::cout << "=======================================================================================\n";
 	//system("cls");
-
-	if (consoleWnd == NULL) {
-		fclose(stdin);
-		fclose(stdout);
-		fclose(stderr);
-		FreeConsole();
-	}
 
 }
 
