@@ -1,22 +1,22 @@
 
 #include "Main.h"
-#define VK_RBUTTON 0x02
-#define VK_MENU 0x12
 
 uintptr_t GamePid = 0;
 uintptr_t GameBaseAddress = 0;
 uintptr_t entitylist = 0;
-
 uintptr_t Spectators = 0;
-
 uintptr_t nextAim = 0;
 uintptr_t AimTarget = 0;
 uintptr_t nextEntityInfoUpdate = milliseconds_now() + 150;
+uintptr_t nextBoneSwitch = 0;
+uintptr_t StartTimeToAim = 0;
+Vector lastSet;
 
 float current_fov_limiter = 999.f;
 float smoothness = 1.f; //Default Smooth
+float vis_old[100];
 
-
+bool TargetLocked = false;
 bool printableOut = false;
 bool aimTeam = false;
 
@@ -26,7 +26,13 @@ int disable_aimbot_with_spectators = 0;
 int disable_aimbot_lock_mode_with_spectators = 1;
 int count_team_entities_as_spectators = 1;
 int enable_glow_hack = 1;
-float vis_old[100];
+int ignore_wall = 1;
+int ignore_knockdown = 1;
+int only_head = 1;
+int CurrentTargetBone = 7;
+int targets[] = { 7,8,7,8 };
+int action = 1;
+int boneIndex = 0;
 
 
 typedef bool (Entity::* EntityPtrDef)();
@@ -158,6 +164,10 @@ struct Fade {
 
 void ProcessPlayer(Entity* LPlayer, Entity* target, UINT64 entitylist, int id) {
 	Protect(_ReturnAddress());
+
+	int health = target->getHealth();
+	int entity_team = target->getTeamId();
+
 	auto fptr = &Entity::Observing;
 	Unprotect((void*)*(uintptr_t*)&fptr);
 	intptr_t obser = target->Observing(GamePid, entitylist);
@@ -172,56 +182,30 @@ void ProcessPlayer(Entity* LPlayer, Entity* target, UINT64 entitylist, int id) {
 		Unprotect(_ReturnAddress());
 		return;
 	}
+
 	auto fptrBone = &Entity::getBonePosition;
 	Unprotect((void*)*(uintptr_t*)&fptrBone);
 	Vector BonePosition = target->getBonePosition(GamePid, 3);
 	Protect((void*)*(uintptr_t*)&fptrBone);
 	Vector LocalPlayerPosition = LPlayer->getPosition();
 	float dist = LocalPlayerPosition.DistTo(BonePosition) / 39.62f;
+
 	if (dist > Max_Cheat_Distance || BonePosition.z > 22000.f) {
 		Unprotect(_ReturnAddress());
 		return;
 	}
-
-	int health = target->getHealth();
 	if (health < 0 || health > 100) {
 		Unprotect(_ReturnAddress());
 		return;
 	}
-
-	int entity_team = target->getTeamId();
 	if (entity_team < 0 || entity_team>31) {
 		Unprotect(_ReturnAddress());
 		return;
 	}
 
-	bool k_obser = 0;
-	bool displayobser = (GetAsyncKeyState(VK_F10) & 0x8000) != 0;
-	if (displayobser && k_obser == 0) {
-		k_obser = 1;
-		if (Spectators >= 1)
-		{
-
-			std::cout << "Spectators: " << Spectators << "\n";
-			Beep(900, 500);
-		}
-	}
-	else if (k_obser == 1) {
-		k_obser = 0;
-	}
-
-
-	bool k_MENU = 0;
-	bool MENU = (GetAsyncKeyState(VK_MENU) & 0x8000) != 0;
-	if (MENU && k_MENU == 0) {
-		k_MENU = 1;
-		Beep(900, 300);
-		aimTeam = !aimTeam;
-	}
-	else if (k_MENU == 1) {
-		k_MENU = 0;
-	}
-
+	Unprotect(ToggleHotkey);
+	ToggleHotkey();
+	Protect(ToggleHotkey);
 
 	if (enable_glow_hack == 1) {
 		if ((int)target->buffer[GLOW_CONTEXT] != 1 || (int)target->buffer[GLOW_VISIBLE_TYPE] != 1 || (int)target->buffer[GLOW_FADE] != 872415232) {
@@ -263,14 +247,23 @@ void ProcessPlayer(Entity* LPlayer, Entity* target, UINT64 entitylist, int id) {
 			}
 		}
 	}
-
-
-
 	if (enable_aimbot == 1) {
 
 		if (target->isBleedOut() || !target->isOkLifeState()) {
-			Unprotect(_ReturnAddress());
-			return;
+			if (ignore_knockdown == 0) {
+				Vector BreathAngles = LPlayer->GetBreathAngles();
+				Vector LocalCamera = LPlayer->GetCamPos();
+				Vector Angle = Math::CalcAngle(LocalCamera, BonePosition);
+				float fov = (float)Math::GetFov(BreathAngles, Angle, dist);
+				if (fov < current_fov_limiter) {
+					AimTarget = target->ptr;
+					current_fov_limiter = fov;
+				}
+			}
+			else {
+				Unprotect(_ReturnAddress());
+				return;
+			}
 		}
 
 		if (aimTeam == false && entity_team == LPlayer->getTeamId()) {
@@ -278,7 +271,7 @@ void ProcessPlayer(Entity* LPlayer, Entity* target, UINT64 entitylist, int id) {
 			return;
 		}
 
-		if (target->vis_time() > vis_old[id] || target->vis_time() < 0.f && vis_old[id] > 0.f) {
+		if (target->vis_time() > vis_old[id] || target->vis_time() < 0.f && vis_old[id] > 0.f || ignore_wall == 1) {
 			Vector BreathAngles = LPlayer->GetBreathAngles();
 			Vector LocalCamera = LPlayer->GetCamPos();
 			Vector Angle = Math::CalcAngle(LocalCamera, BonePosition);
@@ -289,6 +282,8 @@ void ProcessPlayer(Entity* LPlayer, Entity* target, UINT64 entitylist, int id) {
 			}
 		}
 	}
+
+
 	Unprotect(_ReturnAddress());
 }
 
@@ -347,14 +342,8 @@ void PredictPosition(Entity* LocalPlayer, Entity* target, Vector* BonePosition) 
 	Unprotect(_ReturnAddress());
 }
 
-uintptr_t nextBoneSwitch = 0;
-uintptr_t StartTimeToAim = 0;
-int CurrentTargetBone = 3;
-int targets[] = { 7,5,3,2 };
-int action = 1;
-int boneIndex = 8;
-Vector lastSet;
-bool TargetLocked = false;
+
+
 
 void AutoBoneSwitch() {
 	Protect(_ReturnAddress());
@@ -542,82 +531,6 @@ void CheatLoop() {
 			Protect(milliseconds_now);
 		}
 
-		bool k_plus = 0;
-		bool add = (GetAsyncKeyState(VK_ADD) & 0x8000) != 0;
-		if (add && k_plus == 0) {
-			k_plus = 1;
-			if (smoothness >= 19.f) {
-				smoothness = 20.f;
-				printf("Smooth: 20\n");
-				Beep(900, 500);
-			}
-			else {
-				smoothness += 1.f;
-				std::cout << "Smooth: " << smoothness << "\n";
-				Beep(900, 300);
-			}
-		}
-		else if (k_plus == 1) {
-			k_plus = 0;
-		}
-
-		bool k_minus = 0;
-		bool decrease = (GetAsyncKeyState(VK_SUBTRACT) & 0x8000) != 0;
-		if (decrease && k_minus == 0) {
-			k_minus = -1;
-			if (smoothness >= 19.f) {
-				smoothness = 18.f;
-				printf("Smooth: 18\n");
-				Beep(900, 500);
-			}
-			else {
-				smoothness -= 1.f;
-				std::cout << "Smooth: " << smoothness << "\n";
-				Beep(900, 300);
-			}
-		}
-		else if (k_plus == -1) {
-			k_plus = 0;
-		}
-
-		bool k_aimlock = 0;
-		bool aimlock = (GetAsyncKeyState(VK_DELETE) & 0x8000) != 0;
-		if (aimlock && k_aimlock == 0) {
-			k_aimlock = 1;
-			if (enable_aimbot_lock_mode) {
-				enable_aimbot_lock_mode = 0;
-				printf("AimLock [Off]\n");
-				Beep(900, 500);
-			}
-			else {
-				enable_aimbot_lock_mode = 1;
-				printf("AimLock [On]\n");
-				Beep(900, 300);
-			}
-		}
-		else if (k_aimlock == 1) {
-			k_aimlock = 0;
-		}
-
-		bool k_aimbot = 0;
-		bool aimbot = (GetAsyncKeyState(VK_NUMPAD3) & 0x8000) != 0;
-		if (aimbot && k_aimbot == 0) {
-			k_aimbot = 1;
-			if (enable_aimbot) {
-				enable_aimbot = 0;
-				printf("Aimbot [Off]\n");
-				Beep(900, 500);
-			}
-			else {
-				enable_aimbot = 1;
-				printf("Aimbot [On]\n");
-				Beep(900, 300);
-			}
-		}
-		else if (k_aimbot == 1) {
-			k_aimbot = 0;
-		}
-
 		if (enable_aimbot == 1) {
 			Unprotect(milliseconds_now);
 			bool key_pressed = (GetKeyState(VK_RBUTTON) & 0x8000);
@@ -676,6 +589,178 @@ void CheatLoop() {
 
 }
 
+void ToggleHotkey() {
+	Protect(_ReturnAddress());
+
+	bool k_plus = 0;
+	bool add = (GetAsyncKeyState(VK_ADD) & 0x8000) != 0;
+	if (add && k_plus == 0) {
+		k_plus = 1;
+		if (smoothness >= 19.f) {
+			smoothness = 20.f;
+			printf("Smooth: 20\n");
+			Beep(900, 500);
+		}
+		else {
+			smoothness += 1.f;
+			std::cout << "Smooth: " << smoothness << "\n";
+			Beep(900, 300);
+		}
+	}
+	else if (k_plus == 1) {
+		k_plus = 0;
+	}
+
+	bool k_minus = 0;
+	bool decrease = (GetAsyncKeyState(VK_SUBTRACT) & 0x8000) != 0;
+	if (decrease && k_minus == 0) {
+		k_minus = -1;
+		if (smoothness >= 19.f) {
+			smoothness = 18.f;
+			printf("Smooth: 18\n");
+			Beep(900, 500);
+		}
+		else {
+			smoothness -= 1.f;
+			std::cout << "Smooth: " << smoothness << "\n";
+			Beep(900, 300);
+		}
+	}
+	else if (k_plus == -1) {
+		k_plus = 0;
+	}
+
+	bool k_aimbot = 0;
+	bool aimbot = (GetAsyncKeyState(VK_MULTIPLY) & 0x8000) != 0;
+	if (aimbot && k_aimbot == 0) {
+		k_aimbot = 1;
+		if (enable_aimbot) {
+			enable_aimbot = 0;
+			printf("Aimbot [Off]\n");
+			Beep(900, 500);
+		}
+		else {
+			enable_aimbot = 1;
+			printf("Aimbot [On]\n");
+			Beep(900, 300);
+		}
+	}
+	else if (k_aimbot == 1) {
+		k_aimbot = 0;
+	}
+
+	bool k_aimlock = 0;
+	bool aimlock = (GetAsyncKeyState(VK_DELETE) & 0x8000) != 0;
+	if (aimlock && k_aimlock == 0) {
+		k_aimlock = 1;
+		if (enable_aimbot_lock_mode) {
+			enable_aimbot_lock_mode = 0;
+			printf("AimLock [Off]\n");
+			Beep(900, 500);
+		}
+		else {
+			enable_aimbot_lock_mode = 1;
+			printf("AimLock [On]\n");
+			Beep(900, 300);
+		}
+	}
+	else if (k_aimlock == 1) {
+		k_aimlock = 0;
+	}
+
+	bool k_obser = 0;
+	bool displayobser = (GetAsyncKeyState(VK_MENU) & 0x8000) != 0;
+	if (displayobser && k_obser == 0) {
+		k_obser = 1;
+		if (Spectators >= 1)
+		{
+			std::cout << "Spectators: " << Spectators << "\n";
+			Beep(900, 500);
+		}
+	}
+	else if (k_obser == 1) {
+		k_obser = 0;
+	}
+
+	bool k_aimTeam = 0;
+	bool AimTeam = (GetAsyncKeyState(VK_HOME) & 0x8000) != 0;
+	if (AimTeam && k_aimTeam == 0) {
+		k_aimTeam = 1;
+		Beep(900, 300);
+		aimTeam = !aimTeam;
+	}
+	else if (k_aimTeam == 1) {
+		k_aimTeam = 0;
+	}
+
+	bool k_knockdown = 0;
+	bool knockdown = (GetAsyncKeyState(VK_CAPITAL) & 0x8000) != 0;
+	if (knockdown && k_knockdown == 0) {
+		k_knockdown = 1;
+		if (ignore_knockdown) {
+			ignore_knockdown = 0;
+			printf("Ignore Knockdown [Off]\n");
+			Beep(900, 500);
+		}
+		else {
+			ignore_knockdown = 1;
+			printf("Ignore Knockdown [On]\n");
+			Beep(900, 300);
+		}
+	}
+	else if (k_knockdown == 1) {
+		k_knockdown = 0;
+	}
+
+	bool k_onlyhead = 0;
+	bool onlyhead = (GetAsyncKeyState(VK_DECIMAL) & 0x8000) != 0;
+	if (onlyhead && k_onlyhead == 0) {
+		k_onlyhead = 1;
+		if (only_head) {
+			only_head = 0;
+			targets[0] = 7;
+			targets[1] = 5;
+			targets[2] = 3;
+			targets[3] = 2;
+			printf("Aimbot [Body] \n");
+			Beep(900, 500);
+		}
+		else {
+			only_head = 1;
+			targets[0] = 7;
+			targets[1] = 8;
+			targets[2] = 7;
+			targets[3] = 8;
+			printf("Aimbot [Head] \n");
+			Beep(900, 300);
+		}
+	}
+	else if (k_onlyhead == 1) {
+		k_onlyhead = 0;
+	}
+
+	bool k_glowhack = 0;
+	bool glowhack = (GetAsyncKeyState(VK_DIVIDE) & 0x8000) != 0;
+	if (glowhack && k_glowhack == 0) {
+		k_glowhack = 1;
+		if (enable_glow_hack) {
+			enable_glow_hack = 0;
+			printf("Glow Hack [Off]\n");
+			Beep(900, 500);
+		}
+		else {
+			enable_glow_hack = 1;
+			printf("Glow Hack [On]\n");
+			Beep(900, 300);
+		}
+	}
+	else if (k_glowhack == 1) {
+		k_glowhack = 0;
+	}
+
+	Unprotect(_ReturnAddress());
+}
+
 void Configure() {
 
 	HWND consoleWnd = GetConsoleWindow();
@@ -689,16 +774,62 @@ void Configure() {
 	else {
 		printableOut = true;
 	}
-
-	char hi_str[] = { 'H','i',',',' ','W','e','l','c','o','m','e',' ','t','o',' ','C','R','Z',' ','E','F','I',' ','C','h','e','a','t','\n','A','n','s','w','e','r',' ','a','l','l',' ','t','h','e',' ','q','u','e','s','t','i','o','n','s',' ','w','i','t','h',' ','1',' ','o','r',' ','0',' ','f','o','r',' ','t','r','u','e','/','f','a','l','s','e','\n','\0' };
+	char hi_str[] = { 'H','i',',',' ','W','e','l','c','o','m','e',' ','t','o',' ','C','R','Z',' ','E','F','I',' ','C','h','e','a','t','\n','\0' };
 	std::cout << hi_str;
 	memset(hi_str, 0, sizeof(hi_str));
-	char hi2_str[] = { 'I','f',' ','y','o','u',' ','p','a','i','d',' ','f','o','r',' ','t','h','i','s',' ','y','o','u',' ','g','o','t',' ','s','c','a','m',' m','e','d','\n','\0' };
+
+	char hi2_str[] = { 'T','h','i','s',' ','C','h','e','a','t',' ','M','o','d','i','f','i','c','a','t','i','o','n',' ','b','y',' ','D','I','E','G','O',' ','W','i','t','h',' ','C','o','n','f','i','g',':','\n','\0' };
 	std::cout << hi2_str;
 	memset(hi2_str, 0, sizeof(hi2_str));
+
+	char hi4_str[] = { '1','.',' ','A','i','m',' ','K','e','y',' ','i','s',' ','H','o','l','d',' ','R','i','g','h','t',' ','M','o','u','s','e',' ','B','u','t','t','o','n','\n','\0' };
+	std::cout << hi4_str;
+	memset(hi4_str, 0, sizeof(hi4_str));
+
+	char hi5_str[] = { '2','.',' ','N','u','m','p','a','d',' ','+',' ','t','o',' ','I','n','c','r','e','a','s','e',' ','S','m','o','o','t','h','n','e','s','s',' ','A','i','m','b','o','t',' ','[',' ','S','l','o','w',' ','A','i','m','b','o','t',' ',']','\n','\0' };
+	std::cout << hi5_str;
+	memset(hi5_str, 0, sizeof(hi5_str));
+
+	char hi6_str[] = { '3','.',' ','N','u','m','p','a','d',' ','-',' ','t','o',' ','D','e','c','r','e','a','s','e',' ','S','m','o','o','t','h','n','e','s','s',' ','A','i','m','b','o','t',' ','[',' ','F','a','s','t',' ','A','i','m','b','o','t',' ',']','\n','\0' };
+	std::cout << hi6_str;
+	memset(hi6_str, 0, sizeof(hi6_str));
+
+	char hi7_str[] = { '4','.',' ','N','u','m','p','a','d',' ','*',' ','t','o',' ','E','n','a','b','l','e','/','D','i','s','a','b','l','e',' ','A','i','m','b','o','t','\n','\0' };
+	std::cout << hi7_str;
+	memset(hi7_str, 0, sizeof(hi7_str));
+
+	char hi8_str[] = { '5','.',' ','D','e','l','e','t','e',' ','t','o',' ','E','n','a','b','l','e','/','D','i','s','a','b','l','e',' ','A','i','m','l','o','c','k','\n','\0' };
+	std::cout << hi8_str;
+	memset(hi8_str, 0, sizeof(hi8_str));
+
+	char hi9_str[] = { '6','.',' ','N','u','m','p','a','d',' ','/',' ','t','o',' ','E','n','a','b','l','e','/','D','i','s','a','b','l','e',' ','G','l','o','w','H','a','c','k','\n','\0' };
+	std::cout << hi9_str;
+	memset(hi9_str, 0, sizeof(hi9_str));
+
+	char hi10_str[] = { '7','.',' ','H','o','m','e',' ','t','o',' ','E','n','a','b','l','e','/','D','i','s','a','b','l','e',' ','T','e','a','m',' ','A','i','m','b','o','t',' ','(',' ','F','o','r',' ','T','e','s','t',' ','B','o','n','e',' ','A','i','m',' ',')','\n','\0' };
+	std::cout << hi10_str;
+	memset(hi10_str, 0, sizeof(hi10_str));
+
+	char hi11_str[] = { '8','.',' ','C','a','p','s','l','o','c','k',' ','t','o',' ','E','n','a','b','l','e','/','D','i','s','a','b','l','e',' ','I','g','n','o','r','e',' ','K','n','o','c','k','d','o','w','n',' ','(',' ','D','e','f','a','u','l','t',' ','I','s',' ','O','N',' ',')','\n','\0' };
+	std::cout << hi11_str;
+	memset(hi11_str, 0, sizeof(hi11_str));
+
+	char hi12_str[] = { '9','.',' ','N','u','m','p','a','d',' ','.',' ','t','o',' ','S','w','i','t','c','h',' ','A','i','m','b','o','t',' ','L','o','c','k',' ','H','e','a','d','/','B','o','d','y',' ','(',' ','D','e','f','a','u','l','t',' ','I','s',' ','O','n','l','y',' ','H','e','a','d',' ',')','\n','\0' };
+	std::cout << hi12_str;
+	memset(hi12_str, 0, sizeof(hi12_str));
+
+	char hi13_str[] = { '10','.',' ','A','L','T',' ','t','o',' ','S','h','o','w',' ','C','o','u','n','t',' ','S','p','e','c','t','a','t','e',' ','o','n',' ','D','i','s','p','l','a','y',' ','(',' ','G','e','t',' ','S','o','u','n','d',' ','B','e','e','p',' ','i','f',' ','Y','o','u',' ','H','a','v','e',' ','S','p','e','c','t','a','t','o','r',' ',')','\n','\0' };
+	std::cout << hi13_str;
+	memset(hi13_str, 0, sizeof(hi13_str));;
+
+	char hi14_str[] = { 'A','n','s','w','e','r',' ','a','l','l',' ','t','h','e',' ','q','u','e','s','t','i','o','n','s',' ','w','i','t','h',' ','1',' ','o','r',' ','0',' ','f','o','r',' ','t','r','u','e','/','f','a','l','s','e','\n','\0' };
+	std::cout << hi14_str;
+	memset(hi14_str, 0, sizeof(hi14_str));
+
 	char aimbot_str[] = { 'D','o',' ','y','o','u',' ','w','a','n','t',' ','t','o',' ','e','n','a','b','l','e',' ','a','i','m','b','o','t','?',':',' ','\0' };
 	std::cout << aimbot_str;
 	memset(aimbot_str, 0, sizeof(aimbot_str));
+
 	std::cin >> enable_aimbot;
 	std::cin.ignore();
 	std::cin.clear();
@@ -739,9 +870,15 @@ void Configure() {
 	std::cin >> enable_glow_hack;
 	std::cin.ignore();
 	std::cin.clear();
-	std::cout << "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n";
-	system("cls");
+	std::cout << "=======================================================================================\n";
+	//system("cls");
 
+	if (consoleWnd == NULL) {
+		fclose(stdin);
+		fclose(stdout);
+		fclose(stderr);
+		FreeConsole();
+	}
 
 }
 
