@@ -6,7 +6,6 @@
 2. Find CRZAimbot.dll on x64\release\ folder
 3. Make Sure you already load memory.efi
 4. Open any x64 process(2*) that you want as admin like Notepad
-
 5  Drag CRZAimbot.dll and drop to Injection
 6. Type name of proccess application 64 bit ( notepad.exe)
 7. Answer The Question ( 1 = true and 0 False )
