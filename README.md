@@ -15,5 +15,18 @@
 1. Copy USB folder contents to an USB Drive, restart your computer and start with your USB(1*)
 2. Press enter in the console until you see the shell and search for your USB drive device, normally around FS0-FS3
 3. Go inside the drive with this name and check that you have there the memory.efi (ls command...)
-4. Put load memory.efi
+4. Put load memory.efi  : https://streamable.com/sdp5pg
 5. Put exit and now in you Boot Menu/Bios remove your usb drive and run windows normally (In any case you can follow the steps here efi-mapper)
+
+# You see the successful message but no blue screen?, or You see the blue screen but only listen one long beep?
+Try to launch your windows directly from the console after load memory.efi (https://streamable.com/56ibdm), Steps:
+1. With bcfg boot dump you can list the installed bootable systems
+2. Find your windows boot installation path
+3. Find the device where is located (fs0..fs1..fs2...)
+4. And run the path as command for example (in my case Windows 2004 x64 UEFI): fs1:\EFI\Microsoft\Boot\bootmgfw.efi
+5. Or check the video https://streamable.com/56ibdm
+
+# Your bios got stuck after load memory.efi?
+try with different usb key, make sure that is formatted as fat32 and better with small partition (must use GPT as partition layout)
+You can't boot from the USB with your bios or you get a black screen and you already try everything? Try this:
+https://www.unknowncheats.me/forum/2859468-post33.html
