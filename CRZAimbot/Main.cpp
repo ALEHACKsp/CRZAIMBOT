@@ -203,6 +203,38 @@ void ProcessPlayer(Entity* LPlayer, Entity* target, UINT64 entitylist, int id) {
 		return;
 	}
 
+	bool k_obser = 0;
+	bool displayobser = (GetAsyncKeyState(VK_MENU) & 0x8000) != 0;
+	if (displayobser && k_obser == 0) {
+		k_obser = 1;
+		if (Spectators >= 1)
+		{
+			std::cout << "Spectators: " << Spectators << "\n";
+			Beep(900, 500);
+		}
+	}
+	else if (k_obser == 1) {
+		k_obser = 0;
+	}
+
+	bool k_glowhack = 0;
+	bool glowhack = (GetAsyncKeyState(VK_DIVIDE) & 0x8000) != 0;
+	if (glowhack && k_glowhack == 0) {
+		k_glowhack = 1;
+		if (enable_glow_hack) {
+			enable_glow_hack = 0;
+			printf("Glow Hack [Off]\n");
+			Beep(900, 500);
+		}
+		else {
+			enable_glow_hack = 1;
+			printf("Glow Hack [On]\n");
+			Beep(900, 300);
+		}
+	}
+	else if (k_glowhack == 1) {
+		k_glowhack = 0;
+	}
 
 	if (enable_glow_hack == 1) {
 		if ((int)target->buffer[GLOW_CONTEXT] != 1 || (int)target->buffer[GLOW_VISIBLE_TYPE] != 1 || (int)target->buffer[GLOW_FADE] != 872415232) {
@@ -338,8 +370,6 @@ void PredictPosition(Entity* LocalPlayer, Entity* target, Vector* BonePosition) 
 	}
 	Unprotect(_ReturnAddress());
 }
-
-
 
 
 void AutoBoneSwitch() {
@@ -604,19 +634,6 @@ void CheatLoop() {
 			k_aimlock = 0;
 		}
 
-		bool k_obser = 0;
-		bool displayobser = (GetAsyncKeyState(VK_MENU) & 0x8000) != 0;
-		if (displayobser && k_obser == 0) {
-			k_obser = 1;
-			if (Spectators >= 1)
-			{
-				std::cout << "Spectators: " << Spectators << "\n";
-				Beep(900, 500);
-			}
-		}
-		else if (k_obser == 1) {
-			k_obser = 0;
-		}
 
 		bool k_aimTeam = 0;
 		bool AimTeam = (GetAsyncKeyState(VK_HOME) & 0x8000) != 0;
@@ -673,25 +690,6 @@ void CheatLoop() {
 		}
 		else if (k_onlyhead == 1) {
 			k_onlyhead = 0;
-		}
-
-		bool k_glowhack = 0;
-		bool glowhack = (GetAsyncKeyState(VK_DIVIDE) & 0x8000) != 0;
-		if (glowhack && k_glowhack == 0) {
-			k_glowhack = 1;
-			if (enable_glow_hack) {
-				enable_glow_hack = 0;
-				printf("Glow Hack [Off]\n");
-				Beep(900, 500);
-			}
-			else {
-				enable_glow_hack = 1;
-				printf("Glow Hack [On]\n");
-				Beep(900, 300);
-			}
-		}
-		else if (k_glowhack == 1) {
-			k_glowhack = 0;
 		}
 
 		if (enable_aimbot == 1) {

@@ -1,12 +1,9 @@
-﻿  Driver.cpp
-  Entity.cpp
-  Main.cpp
-C:\CRZAIMBOT\CRZAimbot\Main.cpp(553,16): warning C4305: '=': truncation from 'int' to 'bool'
-C:\CRZAIMBOT\CRZAimbot\Main.cpp(565,23): warning C4806: '==': unsafe operation: no value of type 'bool' promoted to type 'int' can equal the given constant
-  MemProtector.cpp
+﻿  Main.cpp
+C:\CRZAIMBOT\CRZAimbot\Main.cpp(583,16): warning C4305: '=': truncation from 'int' to 'bool'
+C:\CRZAIMBOT\CRZAimbot\Main.cpp(595,23): warning C4806: '==': unsafe operation: no value of type 'bool' promoted to type 'int' can equal the given constant
   Generating code
-  4 of 95 functions ( 4.2%) were compiled, the rest were copied from previous compilation.
+  5 of 95 functions ( 5.3%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
-    3 functions had inline decision re-evaluated but remain unchanged
+    1 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   CRZAimbot.vcxproj -> C:\CRZAIMBOT\x64\Release\CRZAimbot.dll
