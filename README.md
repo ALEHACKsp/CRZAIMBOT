@@ -31,4 +31,4 @@ try with different usb key, make sure that is formatted as fat32 and better with
 You can't boot from the USB with your bios or you get a black screen and you already try everything? Try this:
 https://www.unknowncheats.me/forum/2859468-post33.html
 
-# Contact me On Discord : ★Diegø ツ#6299
+# Contact me On Discord : !'★Diegø ツ#6299
