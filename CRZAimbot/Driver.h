@@ -33,29 +33,6 @@ extern mRtlAdjustPrivilege myRtlAdjustPrivilege;
 extern mNtSetSystemEnvironmentValueEx myNtSetSystemEnvironmentValueEx;
 extern mNtQuerySystemInformation myNtQuerySystemInformation;
 
-//extern "C"
-//{
-//	NTSYSAPI
-//		NTSTATUS
-//		NTAPI
-//		RtlAdjustPrivilege(
-//			_In_ ULONG Privilege,
-//			_In_ BOOLEAN Enable,
-//			_In_ BOOLEAN Client,
-//			_Out_ PBOOLEAN WasEnabled
-//		);
-//
-//	NTSYSCALLAPI
-//		NTSTATUS
-//		NTAPI
-//		NtSetSystemEnvironmentValueEx(
-//			_In_ PUNICODE_STRING VariableName,
-//			_In_ LPGUID VendorGuid,
-//			_In_reads_bytes_opt_(ValueLength) PVOID Value,
-//			_In_ ULONG ValueLength,
-//			_In_ ULONG Attributes
-//		);
-//}
 
 typedef struct _MemoryCommand {
 	int magic;

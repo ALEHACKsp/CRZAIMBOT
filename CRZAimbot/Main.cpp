@@ -13,7 +13,7 @@ uintptr_t StartTimeToAim = 0;
 Vector lastSet;
 
 float current_fov_limiter = 999.f;
-float smoothness = 5.f; //Default Smooth
+float smoothness = 1.f; //Default Smooth
 float vis_old[100];
 
 bool TargetLocked = false;
@@ -29,11 +29,6 @@ int enable_glow_hack = 1;
 int ignore_wall = 1;
 int ignore_knockdown = 1;
 int only_head = 1;
-int CurrentTargetBone = 7;
-int targets[] = { 7,8,7,8 };
-int action = 1;
-int boneIndex = 0;
-
 
 typedef bool (Entity::* EntityPtrDef)();
 uintptr_t eptr(EntityPtrDef method) {
@@ -135,8 +130,6 @@ DWORD GetProcessIdByName(wchar_t* name) {
 	Unprotect(_ReturnAddress());
 	return 0;
 }
-
-
 
 uintptr_t milliseconds_now() {
 	static LARGE_INTEGER s_frequency;
@@ -312,7 +305,6 @@ void ProcessPlayer(Entity* LPlayer, Entity* target, UINT64 entitylist, int id) {
 		}
 	}
 
-
 	Unprotect(_ReturnAddress());
 }
 
@@ -371,7 +363,7 @@ void PredictPosition(Entity* LocalPlayer, Entity* target, Vector* BonePosition) 
 	Unprotect(_ReturnAddress());
 }
 
-
+int boneIndex = 0; int action = 1; int CurrentTargetBone = 7; int targets[] = { 7,8,7,8 };
 void AutoBoneSwitch() {
 	Protect(_ReturnAddress());
 	Unprotect(milliseconds_now);
@@ -384,7 +376,7 @@ void AutoBoneSwitch() {
 			action = 1;
 		}
 		CurrentTargetBone = targets[boneIndex];
-		nextBoneSwitch = milliseconds_now() + 250;
+		nextBoneSwitch = milliseconds_now() + 300;
 	}
 	Protect(milliseconds_now);
 	Unprotect(_ReturnAddress());
@@ -520,13 +512,12 @@ void CheatLoop() {
 
 	while (true) {
 
-		uintptr_t lptr = Driver::read<uintptr_t>(GamePid, GameBaseAddress + TOFFSET(OFFSET_LOCAL_ENT));
+		uintptr_t lptr = Driver::read<uintptr_t>(GamePid, GameBaseAddress + TOFFSET(OFFSET_LOCAL_PLAYER));
 		if (lptr == 0) break;
 
 		Unprotect(getEntity);
 		Entity* LocalPlayer = getEntity(GamePid, lptr);
 		Protect(getEntity);
-
 
 		//(char*)(LocalPlayer->buffer + OFFSET_NAME)
 
@@ -554,10 +545,9 @@ void CheatLoop() {
 			}
 
 			Unprotect(milliseconds_now);
-			nextEntityInfoUpdate = milliseconds_now() + 200; //update info every 200ms
+			nextEntityInfoUpdate = milliseconds_now() + 150; //update info every 150ms
 			Protect(milliseconds_now);
 		}
-
 		bool k_plus = 0;
 		bool add = (GetAsyncKeyState(VK_ADD) & 0x8000) != 0;
 		if (add && k_plus == 0) {
@@ -691,7 +681,6 @@ void CheatLoop() {
 		else if (k_onlyhead == 1) {
 			k_onlyhead = 0;
 		}
-
 		if (enable_aimbot == 1) {
 			Unprotect(milliseconds_now);
 			bool key_pressed = (GetKeyState(VK_RBUTTON) & 0x8000);
@@ -750,9 +739,8 @@ void CheatLoop() {
 
 }
 
-//void ToggleHotkey() {
+//void ToggleHotkeyOnCheatLoop() {
 //	Protect(_ReturnAddress());
-//
 //	bool k_plus = 0;
 //	bool add = (GetAsyncKeyState(VK_ADD) & 0x8000) != 0;
 //	if (add && k_plus == 0) {
@@ -829,19 +817,6 @@ void CheatLoop() {
 //		k_aimlock = 0;
 //	}
 //
-//	bool k_obser = 0;
-//	bool displayobser = (GetAsyncKeyState(VK_MENU) & 0x8000) != 0;
-//	if (displayobser && k_obser == 0) {
-//		k_obser = 1;
-//		if (Spectators >= 1)
-//		{
-//			std::cout << "Spectators: " << Spectators << "\n";
-//			Beep(900, 500);
-//		}
-//	}
-//	else if (k_obser == 1) {
-//		k_obser = 0;
-//	}
 //
 //	bool k_aimTeam = 0;
 //	bool AimTeam = (GetAsyncKeyState(VK_HOME) & 0x8000) != 0;
@@ -855,7 +830,7 @@ void CheatLoop() {
 //	}
 //
 //	bool k_knockdown = 0;
-//	bool knockdown = (GetAsyncKeyState(VK_CAPITAL) & 0x8000) != 0;
+//	bool knockdown = (GetAsyncKeyState(VK_OEM_3) & 0x8000) != 0;
 //	if (knockdown && k_knockdown == 0) {
 //		k_knockdown = 1;
 //		if (ignore_knockdown) {
@@ -883,7 +858,7 @@ void CheatLoop() {
 //			targets[1] = 5;
 //			targets[2] = 3;
 //			targets[3] = 2;
-//			printf("Aimbot [Body] \n");
+//			printf("Aimbot [Head-Body] \n");
 //			Beep(900, 500);
 //		}
 //		else {
@@ -892,31 +867,12 @@ void CheatLoop() {
 //			targets[1] = 8;
 //			targets[2] = 7;
 //			targets[3] = 8;
-//			printf("Aimbot [Head] \n");
+//			printf("Aimbot [Head Only] \n");
 //			Beep(900, 300);
 //		}
 //	}
 //	else if (k_onlyhead == 1) {
 //		k_onlyhead = 0;
-//	}
-//
-//	bool k_glowhack = 0;
-//	bool glowhack = (GetAsyncKeyState(VK_DIVIDE) & 0x8000) != 0;
-//	if (glowhack && k_glowhack == 0) {
-//		k_glowhack = 1;
-//		if (enable_glow_hack) {
-//			enable_glow_hack = 0;
-//			printf("Glow Hack [Off]\n");
-//			Beep(900, 500);
-//		}
-//		else {
-//			enable_glow_hack = 1;
-//			printf("Glow Hack [On]\n");
-//			Beep(900, 300);
-//		}
-//	}
-//	else if (k_glowhack == 1) {
-//		k_glowhack = 0;
 //	}
 //
 //	Unprotect(_ReturnAddress());
@@ -1031,7 +987,9 @@ void Configure() {
 	std::cin >> enable_glow_hack;
 	std::cin.ignore();
 	std::cin.clear();
-	std::cout << "=======================================================================================\n";
+	char hi16_str[] = { '=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','=','\n','\0' };
+	std::cout << hi16_str;
+	memset(hi16_str, 0, sizeof(hi16_str));
 	//system("cls");
 
 }
@@ -1082,7 +1040,6 @@ DWORD WINAPI mainThread(PVOID) {
 
 	while (true) {
 		wchar_t name[] = { 'r', '5', 'a', 'p', 'e', 'x', '.', 'e', 'x', 'e', 0 };
-		//wchar_t name[] = { 'E', 'a', 's', 'y', 'A', 'n', 't', 'i', 'C', 'h', 'e', 'a', 't', '_', 'l', 'a', 'u', 'n', 'c', 'h', 'e', 'r', '.', 'e', 'x', 'e', 0 };
 		Unprotect(GetProcessIdByName);
 		DWORD pid = GetProcessIdByName(name);
 		Protect(GetProcessIdByName);

@@ -1,7 +1,5 @@
 #include "Entity.h"
 
-//unsigned long long offset_ran_var = OFFSET_RAN;
-
 Entity* getEntity(uintptr_t g_PID, uintptr_t ptr) {
 	Protect(_ReturnAddress());
 	Entity* entity = new Entity();
@@ -49,25 +47,8 @@ float Entity::vis_time() {
 	return *(float*)(buffer + TOFFSET(OFFSET_VISIBLE_TIME));
 }
 
-unsigned char Entity::getArmorType() {
-
-	return *(unsigned char*)(buffer + TOFFSET(OFFSET_HELMET_TYPE) + 0x4);
-}
-
 bool Entity::isBleedOut() {
 	return *(int*)(buffer + TOFFSET(OFFSET_BLEED_OUT_STATE)) != 0;
-}
-
-int Entity::getShield() {
-	return *(int*)(buffer + TOFFSET(OFFSET_SHIELD));
-}
-
-int Entity::getMaxShield() {
-	return *(int*)(buffer + TOFFSET(OFFSET_MAX_SHIELD));
-}
-
-unsigned char Entity::getHelmetType() {
-	return *(unsigned char*)(buffer + TOFFSET(OFFSET_HELMET_TYPE));
 }
 
 Vector Entity::getPosition() {

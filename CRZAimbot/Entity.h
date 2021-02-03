@@ -16,10 +16,6 @@ public:
 	bool isPlayer();
 	int getTeamId();
 	int getHealth();
-	int getShield();
-	int getMaxShield();
-	unsigned char getArmorType();
-	unsigned char getHelmetType();
 	bool isOkLifeState();
 	bool isBleedOut();
 	float vis_time();
