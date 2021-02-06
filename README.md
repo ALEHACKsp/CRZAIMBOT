@@ -36,6 +36,6 @@ try change anything in my custome efi source like class name ,function name, fil
 avoid using words aimbot, cheat, hack and etc. OFF COURSE DONT FORGET TO PLAY SAFE, DONT TOO ABUSE~
 
 # YOU GET BAN HWID?
-you must use 'spoofer' to remove ban hwid but if you not have it , try change all by manual , like your pc name, ip, mac, machineguid, bcdedit guid , serial number disk, uniqueid disk and then load memory.efi to guaranted unban hwid. and test running apex in 30 minutes if you get ban again, your spoofer not working.
+you must use 'spoofer' to remove ban hwid but if you not have it , try change all by manual , like your pc name, ip, mac, machineguid, bcdedit guid , serial number disk, uniqueid disk and then load memory.efi to guaranted unban hwid. and test running apex in 30 minutes if you not get ban again, your spoofer is working.
 
 # Contact me On Discord : !'★Diegø ツ#6299
