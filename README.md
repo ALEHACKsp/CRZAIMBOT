@@ -31,4 +31,11 @@ try with different usb key, make sure that is formatted as fat32 and better with
 You can't boot from the USB with your bios or you get a black screen and you already try everything? Try this:
 https://www.unknowncheats.me/forum/2859468-post33.html
 
+# How to make Undetectable on Season 8
+try change anything in my custome efi source like class name ,function name, file name,variable name to anything~
+avoid using words aimbot, cheat, hack and etc. OFF COURSE DONT FORGET TO PLAY SAFE, DONT TOO ABUSE~
+
+# YOU GET BAN HWID?
+you must use 'spoofer' to remove ban hwid but if you not have it , try change all by manual , like your pc name, ip, mac, machineguid, bcdedit guid , serial number disk, uniqueid disk and then load memory.efi to guaranted unban hwid. and test running apex in 30 minutes if you get ban again, your spoofer not working.
+
 # Contact me On Discord : !'★Diegø ツ#6299
